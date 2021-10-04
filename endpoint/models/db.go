@@ -9,16 +9,29 @@ import (
 	"time"
 )
 
-type DBService struct {
+type RecordDBService struct {
 	db        *gorm.DB
 	tableName string
 }
 
-func NewDBService(db *gorm.DB,tableName string ){
-
+func InitTables(g *gorm.DB) error {
+	err := g.Exec(createRecordTable).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
-func (d *DBService) CreateRecord(ctx context.Context, r *Record) error {
+func NewDBService(db *gorm.DB, tableName string) *RecordDBService {
+	r := &RecordDBService{
+		db:        db,
+		tableName: tableName,
+	}
+	InitTables(db)
+	return r
+}
+
+func (d *RecordDBService) CreateRecord(ctx context.Context, r *Record) error {
 	r.CTime = int(time.Now().Unix())
 	r.MTime = r.CTime
 
@@ -30,13 +43,13 @@ func (d *DBService) CreateRecord(ctx context.Context, r *Record) error {
 	return nil
 }
 
-func (d *DBService) GetRecordList(ctx context.Context, filter []*tool.Filter)([]*Record, error ) {
+func (d *RecordDBService) GetRecordList(ctx context.Context, filter []*tool.Filter, offset, limit int) ([]*Record, error) {
 
 	var sqlStr []string
 	var val []interface{}
-	for _,v:=range filter {
-		if v.Name == "id" {
-			sqlStr = append(sqlStr, "id in (?)")
+	for _, v := range filter {
+		if v.Name == "userId" {
+			sqlStr = append(sqlStr, "user_id in (?)")
 			val = append(val, v.Values)
 		}
 		if v.Name == "startTime" {
@@ -50,7 +63,7 @@ func (d *DBService) GetRecordList(ctx context.Context, filter []*tool.Filter)([]
 	}
 
 	var data []*Record
-	g := d.db.Table(d.tableName).Where(strings.Join(sqlStr," and "),).Find(&data)
+	g := d.db.Table(d.tableName).Where(strings.Join(sqlStr, " and "), val...).Offset(offset).Limit(limit).Find(&data)
 	if g.Error != nil {
 		log.Log.Printf("GetRecordList failed %+v", g.Error)
 		return nil, g.Error
