@@ -4,3 +4,6 @@ app
 main
 ./config.yaml
 ./log.log
+
+web/.idea
+web/node_modules
