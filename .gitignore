@@ -7,3 +7,5 @@ main
 
 web/.idea
 web/node_modules
+
+config.yaml
