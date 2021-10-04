@@ -14,7 +14,7 @@ type Record struct {
 	CTime int `gorm:"column:ctime"`
 }
 
-var createRecordTable =`
+var createRecordTable = `
 create Table if not exists record(
     user_id varchar(128) NOT NULL primary key,
     type integer NOT NULL,
@@ -26,10 +26,10 @@ create Table if not exists record(
     mtime bigint not NULL
 )`
 
-func InitTables(g * gorm.DB)error{
-	err:=g.Exec(createRecordTable).Error
-	if err!=nil{
+func InitTables(g *gorm.DB) error {
+	err := g.Exec(createRecordTable).Error
+	if err != nil {
 		return err
 	}
-	return  nil
+	return nil
 }
